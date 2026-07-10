@@ -1,0 +1,21 @@
+{
+  "events": [
+    {
+      "id": "evt-calicut",
+      "name": "Ice Immersion Workshop",
+      "desc": "Beach Road Sanctuary, overlooking the Malabar coast.",
+      "address": "Near Beach Road, Calicut, Kerala",
+      "startDate": "2026-07-10",
+      "endDate": "2026-07-24",
+      "timeSlots": [
+        "10:00 AM",
+        "11:00 AM",
+        "12:00 PM",
+        "01:00 PM",
+        "02:00 PM",
+        "03:00 PM"
+      ]
+    }
+  ],
+  "eventsPaused": false
+}

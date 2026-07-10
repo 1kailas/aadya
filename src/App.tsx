@@ -55,6 +55,8 @@ const AadhyaLogo = ({ className = 'w-12 h-12', color = BRAND }) => (
   </svg>
 );
 
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 // ─── Types ───────────────────────────────────────────────────────────────
 interface Booking {
   id: string;
@@ -304,7 +306,7 @@ const AdminPinScreen = ({ onSuccess }: { onSuccess: (token: string) => void }) =
     if (next.length === 4) {
       setLoading(true);
       try {
-        const res = await fetch('/api/auth/login', {
+        const res = await fetch(API_BASE + '/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ pin: next }),
@@ -482,7 +484,7 @@ export default function App() {
   // Fetch full config from server on mount
   const fetchConfig = useCallback(async () => {
     try {
-      const res = await fetch('/api/config');
+      const res = await fetch(API_BASE + '/api/config');
       if (res.ok) {
         const config = await res.json();
         if (config.events && config.events.length > 0) {
@@ -510,7 +512,7 @@ export default function App() {
   const fetchBookings = useCallback(async () => {
     setBookingsLoading(true);
     try {
-      const res = await fetchAdmin('/api/bookings');
+      const res = await fetchAdmin(API_BASE + '/api/bookings');
       if (res.ok) setAdminBookings(await res.json());
     } catch (e) { console.error(e); }
     finally { setBookingsLoading(false); }
@@ -519,7 +521,7 @@ export default function App() {
   const fetchStats = useCallback(async () => {
     setStatsLoading(true);
     try {
-      const res = await fetchAdmin('/api/stats');
+      const res = await fetchAdmin(API_BASE + '/api/stats');
       if (res.ok) setAdminStats(await res.json());
     } catch (e) { console.error(e); }
     finally { setStatsLoading(false); }
@@ -557,7 +559,7 @@ export default function App() {
     }
     setIsLoading(true);
     try {
-      const res = await fetch('/api/create-order', {
+      const res = await fetch(API_BASE + '/api/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount: programPrice }),
@@ -586,7 +588,7 @@ export default function App() {
         handler: async (response: any) => {
           setIsLoading(true);
           try {
-            const vRes = await fetch('/api/verify-payment', {
+            const vRes = await fetch(API_BASE + '/api/verify-payment', {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 razorpay_order_id: response.razorpay_order_id,
@@ -625,7 +627,7 @@ export default function App() {
     if (!success) { setErrorMessage('Payment was cancelled.'); return; }
     setIsLoading(true);
     try {
-      const res = await fetch('/api/verify-payment', {
+      const res = await fetch(API_BASE + '/api/verify-payment', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           razorpay_order_id: simulatedOrderId,
@@ -674,14 +676,14 @@ export default function App() {
 
   const handleDeleteBooking = async (id: string) => {
     try {
-      const res = await fetchAdmin(`/api/bookings/${id}`, { method: 'DELETE' });
+      const res = await fetchAdmin(API_BASE + `/api/bookings/${id}`, { method: 'DELETE' });
       if (res.ok) { fetchBookings(); fetchStats(); setSelectedBooking(null); }
     } catch (e) { console.error(e); }
   };
 
   const handleStatusChange = async (id: string, status: string) => {
     try {
-      const res = await fetchAdmin(`/api/bookings/${id}`, {
+      const res = await fetchAdmin(API_BASE + `/api/bookings/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
@@ -697,7 +699,7 @@ export default function App() {
 
   const resetAllBookings = async () => {
     if (!confirm('Clear ALL bookings? This is irreversible!')) return;
-    await fetchAdmin('/api/bookings/reset', { method: 'POST' });
+    await fetchAdmin(API_BASE + '/api/bookings/reset', { method: 'POST' });
     fetchBookings(); fetchStats();
   };
 
@@ -715,7 +717,7 @@ export default function App() {
     }
     setEventSaving(true);
     try {
-      const res = await fetchAdmin('/api/config/events', {
+      const res = await fetchAdmin(API_BASE + '/api/config/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -747,7 +749,7 @@ export default function App() {
   const handleDeleteEvent = async (id: string) => {
     if (!confirm(`Remove event? Existing bookings for this event will remain.`)) return;
     try {
-      const res = await fetchAdmin(`/api/config/events/${id}`, { method: 'DELETE' });
+      const res = await fetchAdmin(API_BASE + `/api/config/events/${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
         setEvents(data.config.events);
@@ -768,7 +770,7 @@ export default function App() {
     setEventSaving(true);
     const newPausedState = !eventsPaused;
     try {
-      const res = await fetchAdmin('/api/config', {
+      const res = await fetchAdmin(API_BASE + '/api/config', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ eventsPaused: newPausedState }),
