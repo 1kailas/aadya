@@ -821,7 +821,7 @@ export default function App() {
   // ────────────────────────────────────────────────────────────────────────
   // Admin panel — PIN gate
   if (activeTab === 'admin' && !adminAuthenticated) {
-    return <AdminPinScreen onSuccess={() => setAdminAuthenticated(true)} />;
+    return <AdminPinScreen onSuccess={(token) => { setAdminToken(token); setAdminAuthenticated(true); }} />;
   }
 
   return (
