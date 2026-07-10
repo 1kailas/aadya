@@ -43,7 +43,6 @@ import {
 
 // ─── Brand ──────────────────────────────────────────────────────────────
 const BRAND = '#8f501c';
-const ADMIN_PIN = '1234'; // Change this via the ADMIN_PIN env variable on your server
 
 // ─── Logo ────────────────────────────────────────────────────────────────
 const AadhyaLogo = ({ className = 'w-12 h-12', color = BRAND }) => (
@@ -287,27 +286,43 @@ const BookingDetailModal = ({
 };
 
 // ─── Admin PIN Screen ─────────────────────────────────────────────────────
-const AdminPinScreen = ({ onSuccess }: { onSuccess: () => void }) => {
+const AdminPinScreen = ({ onSuccess }: { onSuccess: (token: string) => void }) => {
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
   const [shake, setShake] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleKey = (k: string) => {
+  const handleKey = async (k: string) => {
     if (k === 'del') {
       setPin(p => p.slice(0, -1));
       setError(false);
       return;
     }
-    if (pin.length >= 4) return;
+    if (pin.length >= 4 || loading) return;
     const next = pin + k;
     setPin(next);
     if (next.length === 4) {
-      if (next === ADMIN_PIN) {
-        setTimeout(onSuccess, 200);
-      } else {
+      setLoading(true);
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin: next }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          setTimeout(() => onSuccess(data.token), 200);
+        } else {
+          setError(true);
+          setShake(true);
+          setTimeout(() => { setPin(''); setShake(false); }, 700);
+        }
+      } catch (err) {
         setError(true);
         setShake(true);
         setTimeout(() => { setPin(''); setShake(false); }, 700);
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -360,6 +375,19 @@ const AdminPinScreen = ({ onSuccess }: { onSuccess: () => void }) => {
 export default function App() {
   const [activeTab, setActiveTab] = useState<'booking' | 'admin'>('booking');
   const [adminAuthenticated, setAdminAuthenticated] = useState(false);
+  const [adminToken, setAdminToken] = useState<string | null>(null);
+
+  const fetchAdmin = async (url: string, options: RequestInit = {}) => {
+    const headers = new Headers(options.headers || {});
+    if (adminToken) headers.set('Authorization', `Bearer ${adminToken}`);
+    const res = await fetch(url, { ...options, headers });
+    if (res.status === 401) {
+      setAdminAuthenticated(false);
+      setAdminToken(null);
+      setActiveTab('booking');
+    }
+    return res;
+  };
 
   // Booking state
   const [selectedEventId, setSelectedEventId] = useState('');
@@ -482,20 +510,20 @@ export default function App() {
   const fetchBookings = useCallback(async () => {
     setBookingsLoading(true);
     try {
-      const res = await fetch('/api/bookings');
+      const res = await fetchAdmin('/api/bookings');
       if (res.ok) setAdminBookings(await res.json());
     } catch (e) { console.error(e); }
     finally { setBookingsLoading(false); }
-  }, []);
+  }, [adminToken]);
 
   const fetchStats = useCallback(async () => {
     setStatsLoading(true);
     try {
-      const res = await fetch('/api/stats');
+      const res = await fetchAdmin('/api/stats');
       if (res.ok) setAdminStats(await res.json());
     } catch (e) { console.error(e); }
     finally { setStatsLoading(false); }
-  }, []);
+  }, [adminToken]);
 
   useEffect(() => {
     if (activeTab === 'admin' && adminAuthenticated) {
@@ -646,14 +674,14 @@ export default function App() {
 
   const handleDeleteBooking = async (id: string) => {
     try {
-      const res = await fetch(`/api/bookings/${id}`, { method: 'DELETE' });
+      const res = await fetchAdmin(`/api/bookings/${id}`, { method: 'DELETE' });
       if (res.ok) { fetchBookings(); fetchStats(); setSelectedBooking(null); }
     } catch (e) { console.error(e); }
   };
 
   const handleStatusChange = async (id: string, status: string) => {
     try {
-      const res = await fetch(`/api/bookings/${id}`, {
+      const res = await fetchAdmin(`/api/bookings/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
@@ -669,7 +697,7 @@ export default function App() {
 
   const resetAllBookings = async () => {
     if (!confirm('Clear ALL bookings? This is irreversible!')) return;
-    await fetch('/api/bookings/reset', { method: 'POST' });
+    await fetchAdmin('/api/bookings/reset', { method: 'POST' });
     fetchBookings(); fetchStats();
   };
 
@@ -687,7 +715,7 @@ export default function App() {
     }
     setEventSaving(true);
     try {
-      const res = await fetch('/api/config/events', {
+      const res = await fetchAdmin('/api/config/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -719,7 +747,7 @@ export default function App() {
   const handleDeleteEvent = async (id: string) => {
     if (!confirm(`Remove event? Existing bookings for this event will remain.`)) return;
     try {
-      const res = await fetch(`/api/config/events/${id}`, { method: 'DELETE' });
+      const res = await fetchAdmin(`/api/config/events/${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
         setEvents(data.config.events);
@@ -740,7 +768,7 @@ export default function App() {
     setEventSaving(true);
     const newPausedState = !eventsPaused;
     try {
-      const res = await fetch('/api/config', {
+      const res = await fetchAdmin('/api/config', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ eventsPaused: newPausedState }),
