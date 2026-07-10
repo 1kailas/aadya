@@ -1150,7 +1150,7 @@ export default function App() {
                       id="btn-book-submit"
                       className="w-full bg-[#8f501c] text-[#fdfbf7] py-3.5 rounded-xl font-bold text-sm tracking-wider uppercase shadow-md hover:bg-[#784114] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed"
                     >
-                      {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" />Processing Order...</> : <>Book & Pay with Razorpay (₹{programPrice})<ArrowRight className="w-4 h-4" /></>}
+                      {isLoading ? <><Loader2 className="w-4 h-4 animate-spin flex-shrink-0" /><span className="text-center leading-tight">Processing Order...</span></> : <><span className="text-center leading-tight">Book & Pay with Razorpay (₹{programPrice})</span><ArrowRight className="w-4 h-4 flex-shrink-0" /></>}
                     </button>
                   </form>
                   </>
@@ -1219,8 +1219,8 @@ export default function App() {
                     rel="noopener noreferrer"
                     className="w-full bg-[#25D366] text-white py-3 rounded-xl font-bold text-xs tracking-wider uppercase shadow hover:bg-[#1ebe5d] transition-all flex items-center justify-center gap-2"
                   >
-                    <MessageSquare className="w-4 h-4" />
-                    Open WhatsApp with Booking Details
+                    <MessageSquare className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-center leading-tight">Open WhatsApp with Booking Details</span>
                   </a>
                 </div>
 
