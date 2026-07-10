@@ -1,0 +1,6 @@
+{
+  "name": "Aadhya Wellness",
+  "description": "Premium ice immersion booking platform with secure Razorpay payment integrations and WhatsApp notifications.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
