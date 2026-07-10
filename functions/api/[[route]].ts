@@ -58,7 +58,7 @@ const authenticateAdmin = async (c: any, next: any) => {
   }
   const token = authHeader.split(' ')[1];
   try {
-    const payload = await verify(token, c.env.JWT_SECRET || 'fallback-secret-change-in-production');
+    const payload = await verify(token, c.env.JWT_SECRET || 'fallback-secret-change-in-production', 'HS256');
     if (!payload.admin) throw new Error('Invalid token');
     await next();
   } catch (err) {
@@ -124,7 +124,7 @@ app.post('/auth/login', async (c) => {
   const adminPin = c.env.ADMIN_PIN || '1234';
   
   if (pin === adminPin) {
-    const token = await sign({ admin: true, exp: Math.floor(Date.now() / 1000) + 12 * 60 * 60 }, c.env.JWT_SECRET || 'fallback-secret-change-in-production');
+    const token = await sign({ admin: true, exp: Math.floor(Date.now() / 1000) + 12 * 60 * 60 }, c.env.JWT_SECRET || 'fallback-secret-change-in-production', 'HS256');
     return c.json({ success: true, token });
   }
   return c.json({ success: false, message: 'Invalid PIN' }, 401);
