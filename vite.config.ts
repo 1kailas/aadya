@@ -5,7 +5,12 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
+    root: 'src',
     base: '/aadya/',
+    build: {
+      outDir: '../',
+      emptyOutDir: false,
+    },
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
